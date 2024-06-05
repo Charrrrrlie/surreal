@@ -426,7 +426,7 @@ def main():
         stride = 50
     
     # import idx info (name, split)
-    idx_info = load(open("pkl/idx_info.pickle", 'rb'))
+    idx_info = load(open("pkl/idx_info.pickle", "rb"))
 
     # get runpass
     (runpass, idx) = divmod(idx, len(idx_info))
@@ -814,9 +814,9 @@ def main():
         log_message("Generating fg video (%s)" % cmd_ffmpeg_fg)
         os.system(cmd_ffmpeg_fg)
    
-    cmd_tar = 'tar -czvf %s/%s.tar.gz -C %s %s' % (output_path, rgb_dirname, tmp_path, rgb_dirname)
-    log_message("Tarballing the images (%s)" % cmd_tar)
-    os.system(cmd_tar)
+    # cmd_tar = 'tar -czvf %s/%s.tar.gz -C %s %s' % (output_path, rgb_dirname, tmp_path, rgb_dirname)
+    # log_message("Tarballing the images (%s)" % cmd_tar)
+    # os.system(cmd_tar)
     
     # save annotation excluding png/exr data to _info.mat file
     import scipy.io

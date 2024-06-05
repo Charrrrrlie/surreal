@@ -78,8 +78,8 @@ def rotateBody(RzBody, pelvisRotVec):
 # Parameters are hard-coded since all SURREAL images use the same.
 def get_intrinsic():
     # These are set in Blender (datageneration/main_part1.py)
-    res_x_px = 320  # *scn.render.resolution_x
-    res_y_px = 240  # *scn.render.resolution_y
+    res_x_px = 256  # *scn.render.resolution_x
+    res_y_px = 256  # *scn.render.resolution_y
     f_mm = 60  # *cam_ob.data.lens
     sensor_w_mm = 32  # *cam_ob.data.sensor_width
     sensor_h_mm = sensor_w_mm * res_y_px / res_x_px  # *cam_ob.data.sensor_height (function of others)
@@ -116,7 +116,7 @@ def get_extrinsic(T):
     #                               (0.0, 0.0, 0.0, 1.0)))
 
     # Convert camera location to translation vector used in coordinate changes
-    T_world2bcam = -1 * np.dot(R_world2bcam, T)
+    T_world2bcam = -1 * np.dot(R_world2bcam, T.transpose())
 
     # Following is needed to convert Blender camera to computer vision camera
     R_bcam2cv = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
@@ -160,12 +160,15 @@ def main():
     print('t_end: {}'.format(args.t_end))
 
     info = sio.loadmat(args.fileinfo)
+    # for key, value in info.items():
+    #     if isinstance(value, np.ndarray):
+    #         info[key] = info[key][..., 0]
 
     # <========= LOAD SMPL MODEL BASED ON GENDER
-    if info['gender'][0] == 0:  # f
-        m = load_model(os.path.join(SMPL_PATH, 'models/basicModel_f_lbs_10_207_0_v1.0.0.pkl'))
-    elif info['gender'][0] == 1:  # m
-        m = load_model(os.path.join(SMPL_PATH, 'models/basicModel_m_lbs_10_207_0_v1.0.0.pkl'))
+    if info['gender'][0, 0] == 0:  # f
+        m = load_model('models/basicModel_f_lbs_10_207_0_v1.0.0.pkl')
+    elif info['gender'][0, 0] == 1:  # m
+        m = load_model('models/basicModel_m_lbs_10_207_0_v1.0.0.pkl')
     # =========>
 
     root_pos = m.J_transformed.r[0]
