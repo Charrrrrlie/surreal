@@ -11,6 +11,8 @@ from mathutils import Matrix, Vector, Quaternion, Euler
 from glob import glob
 from random import choice
 
+from pickle import load
+
 sys.path.append(os.getcwd())
 from custumized_utils import init_envs, allocate_output_dict, apply_trans_pose_shape, reset_joint_positions, get_bone_locs
 
@@ -234,21 +236,24 @@ def main():
         reset_loc = (bone_locs_2D.max(axis=-1) > 256).any() or (bone_locs_2D.min(axis=0) < 0).any()
         arm_ob.pose.bones[obname+'_root'].rotation_quaternion = Quaternion((1, 0, 0, 0))
 
-    
+    final_output_path = join(params['output_path'], 'run{}_{}'.format(idx, ishape))
+    if not exists(final_output_path):
+        os.makedirs(final_output_path)
+
     # save RGB data with ffmpeg (if you don't have h264 codec, you can replace with another one and control the quality with something like -q:v 3)
-    cmd_ffmpeg = 'ffmpeg -y -r 30 -i ''%s'' -c:v h264 -pix_fmt yuv420p -crf 23 ''%s/c%04d.mp4''' % (join(params['rgb_path'], 'Image%04d.png'), params['output_path'], (ishape + 1))
+    cmd_ffmpeg = 'ffmpeg -y -r 30 -i ''%s'' -c:v h264 -pix_fmt yuv420p -crf 23 ''%s/c%04d.mp4''' % (join(params['rgb_path'], 'Image%04d.png'), final_output_path, (ishape))
     log_message("Generating RGB video (%s)" % cmd_ffmpeg)
     os.system(cmd_ffmpeg)
-    
-    if(params['output_types']['vblur']):
-        cmd_ffmpeg_vblur = 'ffmpeg -y -r 30 -i ''%s'' -c:v h264 -pix_fmt yuv420p -crf 23 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" ''%s/c%04d.mp4''' % (join(params['res_paths']['vblur'], 'Image%04d.png'), params['output_path']+'_vblur', (ishape + 1))
-        log_message("Generating vblur video (%s)" % cmd_ffmpeg_vblur)
-        os.system(cmd_ffmpeg_vblur)
 
-    if(params['output_types']['fg']):
-        cmd_ffmpeg_fg = 'ffmpeg -y -r 30 -i ''%s'' -c:v h264 -pix_fmt yuv420p -crf 23 ''%s/c%04d.mp4''' % (join(params['res_paths'] ['fg'], 'Image%04d.png'), params['output_path']+'_fg', (ishape + 1))
-        log_message("Generating fg video (%s)" % cmd_ffmpeg_fg)
-        os.system(cmd_ffmpeg_fg)
+    # if(params['output_types']['vblur']):
+    #     cmd_ffmpeg_vblur = 'ffmpeg -y -r 30 -i ''%s'' -c:v h264 -pix_fmt yuv420p -crf 23 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" ''%s/c%04d.mp4''' % (join(params['res_paths']['vblur'], 'Image%04d.png'), params['output_path']+'_vblur', (ishape + 1))
+    #     log_message("Generating vblur video (%s)" % cmd_ffmpeg_vblur)
+    #     os.system(cmd_ffmpeg_vblur)
+
+    # if(params['output_types']['fg']):
+    #     cmd_ffmpeg_fg = 'ffmpeg -y -r 30 -i ''%s'' -c:v h264 -pix_fmt yuv420p -crf 23 ''%s/c%04d.mp4''' % (join(params['res_paths'] ['fg'], 'Image%04d.png'), params['output_path']+'_fg', (ishape + 1))
+    #     log_message("Generating fg video (%s)" % cmd_ffmpeg_fg)
+    #     os.system(cmd_ffmpeg_fg)
    
     # cmd_tar = 'tar -czvf %s/%s.tar.gz -C %s %s' % (output_path, rgb_dirname, tmp_path, rgb_dirname)
     # log_message("Tarballing the images (%s)" % cmd_tar)
@@ -256,7 +261,7 @@ def main():
     
     # save annotation excluding png/exr data to _info.mat file
     import scipy.io
-    scipy.io.savemat(params['matfile_info_path'], dict_info, do_compression=True)
+    scipy.io.savemat(join(final_output_path, 'c%04d_info.mat' % ishape), dict_info, do_compression=True)
 
 if __name__ == '__main__':
     main()

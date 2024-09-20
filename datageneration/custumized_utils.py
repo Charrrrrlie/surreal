@@ -180,7 +180,7 @@ def create_sh_material(tree, sh_path, img=None):
 # create the different passes that we render
 def create_composite_nodes(tree, params, img=None, idx=0):
     res_paths = {k:join(params['tmp_path'], '%05d_%s'%(idx, k)) for k in params['output_types'] if params['output_types'][k]}
-    
+
     # clear default nodes
     for n in tree.nodes:
         tree.nodes.remove(n)

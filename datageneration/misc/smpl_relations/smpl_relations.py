@@ -116,7 +116,7 @@ def get_extrinsic(T):
     #                               (0.0, 0.0, 0.0, 1.0)))
 
     # Convert camera location to translation vector used in coordinate changes
-    T_world2bcam = -1 * np.dot(R_world2bcam, T.transpose())
+    T_world2bcam = -1 * np.dot(R_world2bcam, T)
 
     # Following is needed to convert Blender camera to computer vision camera
     R_bcam2cv = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
@@ -133,6 +133,7 @@ def get_extrinsic(T):
 def project_vertices(points, intrinsic, extrinsic):
     homo_coords = np.concatenate([points, np.ones((points.shape[0], 1))], axis=1).transpose()
     proj_coords = np.dot(intrinsic, np.dot(extrinsic, homo_coords))
+
     proj_coords = proj_coords / proj_coords[2]
     proj_coords = proj_coords[:2].transpose()
     return proj_coords
@@ -199,8 +200,9 @@ def main():
         smpl_joints3D = m.J_transformed.r
 
         # Project 3D -> 2D
-        proj_smpl_vertices = project_vertices(smpl_vertices, intrinsic, extrinsic)
         proj_smpl_joints3D = project_vertices(smpl_joints3D, intrinsic, extrinsic)
+        proj_smpl_vertices = project_vertices(smpl_vertices, intrinsic, extrinsic)
+
         proj_joints3D = project_vertices(joints3D, intrinsic, extrinsic)
 
         # Read frame of the video
