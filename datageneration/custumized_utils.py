@@ -513,4 +513,80 @@ def init_envs(params):
         material.node_tree.nodes['Vector Math'].inputs[1].default_value[:2] = (0, 0)
 
     return scene, scs, ob, obname, arm_ob, cam_ob, gender, params
-    
+
+
+def my_truncated_normal(pos, neg, size=[1,1], ignore=0.4, mean=0.0):
+
+    if np.random.rand(1) < ignore:
+        return np.zeros(size)
+
+    # 50% use positive, 50% use negative
+    if np.random.rand(1) < 0.5:
+        width = pos
+        low = -pos
+        up = pos
+        flag = 1
+        if pos == mean:
+            return np.zeros(size)
+    else:
+        width = neg
+        low = -neg
+        up = neg
+        flag = -1
+        if neg == mean:
+            return np.zeros(size)
+
+    # 95% of the data is within 1.96 std
+    std = width / 1.96
+    return np.abs(np.clip(np.random.normal(0, std, size=size), low, up)) * flag + mean
+
+
+def rule_transformation(pose, beta, batch_size):
+
+    beta = my_truncated_normal(1.5, 1.5, size=[10], ignore=0)  # roughly set
+
+    # TODO(yyc): consider joint distribution of legs(hip, knee, ankle) and arms(shoulder, elbow, wrist)
+
+    range_list = [[10, 10, 90], [120], [45],
+                [45, 60], [10, 10], [30, 0],
+                [45, 60], [10, 10], [0, 30],
+                [60, 20], [30, 30], [30, 30],
+                [70, 0], [20, 20], [10, 10],
+                [70, 0], [20, 20], [10, 10],
+                [20, 10], [0, 0], [15, 15],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [15, 15], [50, 50], [15, 15],
+                [90, 90], [50, 120], [150, 30, -60],
+                [90, 90], [120, 50], [30, 150, 60],
+                [60, 60], [0, 120], [15, 15],
+                [60, 60], [120, 0], [15, 15],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+                [0, 0], [0, 0], [0, 0],
+    ]
+
+    for i, r_l in enumerate(range_list):
+        if i == 0:
+            ignore = 0
+        else:
+            ignore = 0.4
+        if len(r_l) == 1:
+            # NOTE(yyc): for root only
+            ignore = 0
+            pose[:, i] = my_truncated_normal(r_l[0] * np.pi / 180.0, r_l[0] * np.pi / 180.0, size=[batch_size], ignore=ignore)
+        elif len(r_l) == 2:
+            pose[:, i] = my_truncated_normal(r_l[0] * np.pi / 180.0, r_l[1] * np.pi / 180.0, size=[batch_size])
+        elif len(r_l) == 3:
+            pose[:, i] = my_truncated_normal(r_l[0] * np.pi / 180.0, r_l[1] * np.pi / 180.0, mean=r_l[2] * np.pi / 180.0, size=[batch_size], ignore=ignore)
+        else:
+            pass
+
+    return pose, beta

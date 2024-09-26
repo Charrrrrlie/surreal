@@ -15,6 +15,7 @@ from pickle import load
 
 sys.path.append(os.getcwd())
 from custumized_utils import init_envs, allocate_output_dict, apply_trans_pose_shape, reset_joint_positions, get_bone_locs
+from custumized_utils import rule_transformation
 
 sys.path.insert(0, ".")
 
@@ -79,6 +80,26 @@ def load_dataset(params, ob, obname, gender):
     return data['poses'][fbegin:fend:stepsize], shape, data['trans'][fbegin:fend:stepsize],\
         smpl_data['regression_verts'], smpl_data['joint_regressor']
 
+def load_pseudo_data(params):
+    smpl_data_folder = params['smpl_data_folder']
+    smpl_data_filename = params['smpl_data_filename']
+    use_split = params['use_split']
+
+    ishape = params['ishape']
+    idx = params['idx']
+    stepsize = params['stepsize']
+    clipsize = params['clipsize']
+    stride = params['stride']
+    
+    smpl_data = np.load(join(smpl_data_folder, smpl_data_filename))
+    
+    pose = np.zeros((clipsize, 72))
+    shape = np.zeros((clipsize, 10))
+    pose, shape = rule_transformation(pose, shape, clipsize)
+    trans = np.zeros((clipsize, 3))
+
+    return pose, shape, trans,\
+        smpl_data['regression_verts'], smpl_data['joint_regressor']
 
 import time
 start_time = None
@@ -127,6 +148,7 @@ def main():
     log_message("Importing configuration")
     import config
     params = config.load_file('config', 'SYNTH_DATA')
+    params['tmp_path'] = params['tmp_path'] + str(idx)
     params['idx'] = idx
     params['ishape'] = ishape
     params['stride'] = stride
@@ -140,7 +162,11 @@ def main():
 
     
     # TODO(yyc): load data
-    data_pose, data_shape, data_trans, regresson_verts, joint_regressor = load_dataset(params, ob, obname, gender)
+    if params['use_pseudo_data']:
+        data_pose, data_shape, data_trans, regresson_verts, joint_regressor = load_pseudo_data(params)
+    # data_pose, data_shape, data_trans, regresson_verts, joint_regressor = load_dataset(params, ob, obname, gender)
+    # print(data_pose[0, :3])
+    # raise ValueError('stop here')
     dict_info = allocate_output_dict(len(data_pose), params)
     
     orig_pelvis_loc = (arm_ob.matrix_world.copy() * arm_ob.pose.bones[obname+'_Pelvis'].head.copy()) - Vector((-1., 1., 1.))

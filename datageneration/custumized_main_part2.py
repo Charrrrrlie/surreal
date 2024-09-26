@@ -81,6 +81,7 @@ if __name__ == '__main__':
     # import configuration
     import config
     params = config.load_file('config', 'SYNTH_DATA')
+    params['tmp_path'] = params['tmp_path'] + str(idx)
     
     smpl_data_folder = params['smpl_data_folder']
     smpl_data_filename = params['smpl_data_filename']
