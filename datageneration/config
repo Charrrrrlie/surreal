@@ -1,0 +1,21 @@
+[SYNTH_DATA]
+tmp_path           = 'tmp/run_'
+output_path        = 'smpl_pseudo' # output folder
+bg_path            = '../download/surreal/SURREAL/data/lsun/church_outdoor_train/'
+openexr_py2_path   = "/sequoia/data1/gvarol/tools/OpenEXR/OpenEXR-1.2.0/build/lib.linux-x86_64-2.7"
+
+output_types       = {'depth':True, 'fg':False, 'gtflow':False, 'normal':False, 'segm':True, 'vblur':False}
+
+smpl_data_folder   = 'smpl_data'
+smpl_data_filename = 'smpl_data.npz'
+clothing_option    = 'all' # grey, nongrey or all
+
+use_split = 'train' # train, test, all
+
+resy     = 512  # width
+resx     = 512  # height
+stepsize = 1    # subsampling MoCap sequence by selecting every 4th frame
+# stride   = 50   # percent overlap between clips (not used)
+clipsize = 10  # nFrames in each clip, where the random parameters are fixed
+
+use_pseudo_data = True
